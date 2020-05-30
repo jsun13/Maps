@@ -1,9 +1,10 @@
 <resources>
     <string name="app_name">Map</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">Maps</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="faculty">Faculty</string>
     <string name="resident">Resident</string>
     <string name="commuter">Commuter</string>
-    <string name="title_activity_slots">SlotsActivity</string>
+    <string name="search_hint">Find location</string>
+    <string name="title_activity_search">SearchActivity</string>
 </resources>

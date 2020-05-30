@@ -1,8 +1,10 @@
 package junzhaosun.map;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -20,8 +22,11 @@ import androidx.core.content.ContextCompat;
 
 import android.os.TestLooperManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.SearchView;
 import android.widget.TextView;
 
 import junzhaosun.map.R;
@@ -32,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView resident;
     private TextView commuter;
     private TextView faculty;
-
+    private SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,12 +46,18 @@ public class MainActivity extends AppCompatActivity {
         resident= findViewById(R.id.resident);
         commuter = findViewById(R.id.commuter);
         faculty= findViewById(R.id.faculty);
+
+        sharedPreferences = getSharedPreferences("data",Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+        if(sharedPreferences.contains("resident") || sharedPreferences.contains("commuter") ||sharedPreferences.contains("faculty"))
+            sharedPreferences.edit().clear().apply();
         resident.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                intent.putExtra("identity","resident");
-                startActivity(intent);
+
+                editor.putBoolean("resident", true);
+                editor.commit();
+                startActivity(new Intent(getApplicationContext(), MapsActivity.class));
 
             }
         });
@@ -54,33 +65,40 @@ public class MainActivity extends AppCompatActivity {
         commuter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                intent.putExtra("identity","commuter");
-                startActivity(intent);
+
+                editor.putBoolean("commuter", true);
+                editor.commit();
+                startActivity(new Intent(getApplicationContext(), MapsActivity.class));
 
             }
         });
+
+        //facultY为什么比其他俩加载要慢？？？
 
         faculty.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MapsActivity.class);
-                intent.putExtra("identity","faculty");
-                startActivity(intent);
+
+                editor.putBoolean("faculty", true);
+                editor.commit();
+                startActivity(new Intent(getApplicationContext(), MapsActivity.class));
             }
         });
-//        Toolbar toolbar = findViewById(R.id.toolbar);
-////        setSupportActionBar(toolbar);
-////
-////        FloatingActionButton fab = findViewById(R.id.fab);
-////        fab.setOnClickListener(new View.OnClickListener() {
-////            @Override
-////            public void onClick(View view) {
-////                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-////                        .setAction("Action", null).show();
-////            }
-////        });
     }
 
+//    /**
+//     * if user navigates back, we reset their preference
+//     */
+//    @Override
+//    protected void onRestart(){
+//        super.onRestart();
+//        if(sharedPreferences!=null){
+//            sharedPreferences.edit().clear().apply();
+//        }
+//    }
+
+    /**
+     * need to implement notice to save preference
+     */
 
 }

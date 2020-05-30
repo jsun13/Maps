@@ -16,9 +16,16 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".SlotsActivity"
-            android:label="@string/title_activity_slots"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:name=".SearchActivity"
+            android:label="@string/title_activity_search"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.searchable"
+                android:resource="@xml/searchable" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
@@ -43,7 +50,9 @@
 
         <activity
             android:name=".MapsActivity"
-            android:label="Maps"></activity>
+            android:label="Maps">
+
+        </activity>
     </application>
 
 </manifest>
