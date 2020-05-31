@@ -31,11 +31,17 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/Save"
+            android:id="@+id/save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onSave"
             android:text="Save" />
+
+        <Button
+            android:id="@+id/relocate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="70dp"
+            android:text="Relocate" />
     </LinearLayout>
 
 </LinearLayout>
