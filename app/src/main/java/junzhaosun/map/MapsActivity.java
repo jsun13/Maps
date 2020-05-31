@@ -55,7 +55,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private boolean isFirstTime=true;
+//    private boolean isFirstTime=true;
     private GoogleMap mMap;
     private Constants constant=new Constants();
     private List<LatLng> listLocation;
@@ -63,7 +63,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private SharedPreferences sharedPreferences;
     private Location myLocation;
     private Marker searchMark;
-//    private boolean hasSearch=false;
+    private boolean hasSearch=false;
+    private String query;
     /***
      * Whether a user responses yes or no to location request
      * @param requestCode
@@ -81,7 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                     Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    centerMapOnLocation(lastKnownLocation, "Your Location");
+                    centerMapOnLocation(lastKnownLocation, "Your location");
                 }
             }
         }
@@ -122,19 +123,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onClick(View v) {
                 centerMapOnLocation(myLocation, "my Location");
+                hasSearch=false;
             }
         });
 
         Intent intent=getIntent();
 
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            String query=intent.getStringExtra(SearchManager.QUERY);
-            Log.e("query", "get query from search!");
-            Toast.makeText(getApplicationContext(), "receive query "+query, Toast.LENGTH_SHORT).show();
-            if(SearchActivity.queries!=null && query!=null){
-                SearchActivity.queries.add(query);
-                moveToQuery(query);
-            }
+            hasSearch=true;
+            query=intent.getStringExtra(SearchManager.QUERY);
+            moveToQuery(query);
+//            if(SearchActivity.queries!=null && query!=null){
+//                SearchActivity.queries.add(query);
+//                SharedPreferences savedlocs=getSharedPreferences("results",Context.MODE_PRIVATE);
+//                try{
+//                    savedlocs.edit().putString("queries",ObjectSerializer.serialize(SearchActivity.queries)).apply();
+//                }catch (IOException e){
+//                    e.printStackTrace();
+//                }
+//                moveToQuery(query);
+//            }
         }
     }
 
@@ -144,9 +152,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
-                String searchLoc=data.getStringExtra("query");
-                Toast.makeText(getApplicationContext(), "receive result"+searchLoc, Toast.LENGTH_SHORT).show();
-                moveToQuery(searchLoc);
+                if(data.hasExtra("query")){
+                    String searchLoc=data.getStringExtra("query");
+                    moveToQuery(searchLoc);
+                }
             }
         }
     }
@@ -160,25 +169,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setUpMap();
     }
 
+
     private void setUpMap(){
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                if(isFirstTime){
+                if(!hasSearch){
                     centerMapOnLocation(location, "Your location");
-                    Toast.makeText(getApplicationContext(),"enter first", Toast.LENGTH_SHORT).show();
-                    isFirstTime=false;
-                }else if(!isFirstTime){
-                    LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                    if(curmark!=null){
-                        curmark.remove();
-                    }
-                    curmark=mMap.addMarker(new MarkerOptions().position(userLocation).title("Your location"));
+                }else if(hasSearch){
+                    moveToQuery(query);
                 }
                 myLocation=location;
-
+//                locationManager.removeUpdates(locationListener);
+//                locationManager = null;
+//                else if(!isFirstTime){
+//                    LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
+//                    if(curmark!=null){
+//                        curmark.remove();
+//                    }
+//                    curmark=mMap.addMarker(new MarkerOptions().position(userLocation).title("Your location"));
+//                }
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -201,7 +213,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
                 ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
             }else{
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 30, locationListener);
             }
         }
     }
