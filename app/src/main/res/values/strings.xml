@@ -7,4 +7,5 @@
     <string name="commuter">Commuter</string>
     <string name="search_hint">Find location</string>
     <string name="title_activity_search">SearchActivity</string>
+    <string name="title_activity_dummy">dummyActivity</string>
 </resources>

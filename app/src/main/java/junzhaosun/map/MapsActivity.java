@@ -55,7 +55,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LocationManager locationManager;
     private LocationListener locationListener;
-//    private boolean isFirstTime=true;
     private GoogleMap mMap;
     private Constants constant=new Constants();
     private List<LatLng> listLocation;
@@ -182,15 +181,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     moveToQuery(query);
                 }
                 myLocation=location;
-//                locationManager.removeUpdates(locationListener);
-//                locationManager = null;
-//                else if(!isFirstTime){
-//                    LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
-//                    if(curmark!=null){
-//                        curmark.remove();
-//                    }
-//                    curmark=mMap.addMarker(new MarkerOptions().position(userLocation).title("Your location"));
-//                }
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -268,23 +258,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void moveToQuery( String query){
+    private void moveToQuery( String query){ //这里出现BUG
+        //可能是API, 也可能是版本问题
+
         Geocoder geocoder=new Geocoder(this);
-        try{
-
-            List<Address> addresses=geocoder.getFromLocationName(query, 1);
-            if(addresses != null && addresses.size()>0) {
-                Address address=addresses.get(0);
-                LatLng newloc=new LatLng(address.getLatitude(),address.getLongitude());
-                if(searchMark!=null) searchMark.remove();
-                if(mMap!=null){
-                    searchMark=mMap.addMarker(new MarkerOptions().position(newloc).title("new location"));
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newloc, 14));
-                }
-            }
-
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+        Toast.makeText(getApplicationContext(), "move to "+query, Toast.LENGTH_SHORT).show();
+//        try{
+//            List<Address> addresses=geocoder.getFromLocationName(query, 1);
+//
+//            if(addresses != null && addresses.size()>0) {
+//                Address address=addresses.get(0);
+//                LatLng newLoc=new LatLng(address.getLatitude(),address.getLongitude());
+//
+//                if(searchMark!=null) searchMark.remove();
+//                if(mMap!=null){
+//                    searchMark=mMap.addMarker(new MarkerOptions().position(newLoc).title("new location"));
+//                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLoc, 14));
+//                }
+//            }else{
+//                Toast.makeText(getApplicationContext(), "cannot get from address name", Toast.LENGTH_SHORT).show();
+//            }
+//
+//        }catch (IOException e){
+//
+//            e.printStackTrace();
+//        }
     }
 }
