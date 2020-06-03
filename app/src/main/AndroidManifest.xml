@@ -7,18 +7,20 @@
          location permissions for the 'MyLocation' functionality.
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:usesCleartextTraffic="true">
+        android:theme="@style/AppTheme">
+<!--        android:usesCleartextTraffic="true">-->
         <activity
             android:name=".SearchActivity"
             android:label="@string/title_activity_search"
-            android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme"
+            android:windowSoftInputMode="adjustPan|stateVisible">
         </activity>
         <activity
             android:name=".MainActivity"
@@ -40,7 +42,7 @@
         -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo" />
+            android:value="@string/google_maps_key" />
 
         <activity
             android:name=".MapsActivity"

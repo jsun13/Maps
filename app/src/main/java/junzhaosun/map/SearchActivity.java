@@ -6,11 +6,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.Image;
 import android.os.Bundle;
 
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
 import android.view.Menu;
@@ -20,9 +22,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import junzhaosun.map.ListItemAdapter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +63,7 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        ListView listView=(ListView) findViewById(R.id.listView);
+        ListView listView=(ListView) findViewById(R.id.listview);
         queries =new ArrayList<>();
 
         sharedPreferences=getSharedPreferences("results",Context.MODE_PRIVATE);
@@ -69,16 +76,36 @@ public class SearchActivity extends AppCompatActivity {
             }
         }
 
-        ArrayAdapter<String> saveAdapter=new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, queries);
+        final ListItemAdapter saveAdapter=new ListItemAdapter(getBaseContext(), queries);
         listView.setAdapter(saveAdapter);
+
+        saveAdapter.setOnClickListener(new ListItemAdapter.mListener() {
+            @Override
+            public void onShowLocation(BaseAdapter adapter, View view, int position) {
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("query", queries.get(position));
+                setResult(Activity.RESULT_OK,returnIntent);
+                finish();
+            }
+
+            @Override
+            public void onDeleteLocation(BaseAdapter adapter, View view, int position) {
+                queries.remove(position);
+                saveAdapter.notifyDataSetChanged();
+                try{
+                    sharedPreferences.edit().putString("queries",ObjectSerializer.serialize(queries)).apply();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+            }
+        });
+
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent returnIntent = new Intent();
-                returnIntent.putExtra("query", parent.getItemAtPosition(position).toString());
-                setResult(Activity.RESULT_OK,returnIntent);
-                finish();
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                Log.e("list view", "click");
+
             }
         });
 
