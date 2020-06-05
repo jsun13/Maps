@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -63,7 +64,7 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        ListView listView=(ListView) findViewById(R.id.listview);
+        final ListView listView=(ListView) findViewById(R.id.listview);
         queries =new ArrayList<>();
 
         sharedPreferences=getSharedPreferences("results",Context.MODE_PRIVATE);
@@ -76,7 +77,7 @@ public class SearchActivity extends AppCompatActivity {
             }
         }
 
-        final ListItemAdapter saveAdapter=new ListItemAdapter(getBaseContext(), queries);
+        ListItemAdapter saveAdapter=new ListItemAdapter(getBaseContext(), queries);
         listView.setAdapter(saveAdapter);
 
         saveAdapter.setOnClickListener(new ListItemAdapter.mListener() {
@@ -87,11 +88,9 @@ public class SearchActivity extends AppCompatActivity {
                 setResult(Activity.RESULT_OK,returnIntent);
                 finish();
             }
-
             @Override
-            public void onDeleteLocation(BaseAdapter adapter, View view, int position) {
-                queries.remove(position);
-                saveAdapter.notifyDataSetChanged();
+            public void onDeleteLocation(ListItemAdapter adapter, View view, int position) {
+                adapter.remove(position);
                 try{
                     sharedPreferences.edit().putString("queries",ObjectSerializer.serialize(queries)).apply();
                 }catch (IOException e){
@@ -99,16 +98,6 @@ public class SearchActivity extends AppCompatActivity {
                 }
             }
         });
-
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-                Log.e("list view", "click");
-
-            }
-        });
-
 
         if(searchView!=null){
             searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {

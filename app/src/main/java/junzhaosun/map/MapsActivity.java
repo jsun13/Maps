@@ -99,7 +99,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         final TextInputEditText inputEditText=(TextInputEditText) findViewById(R.id.inputLoc);
 
-
+        /**
+         * onclick methods for buttons
+         */
         inputEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -126,13 +128,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        /**
+         * store unique action search result
+         */
         Intent intent=getIntent();
 
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             hasSearch=true;
             query=intent.getStringExtra(SearchManager.QUERY);
             moveToQuery(query);
-            if(SearchActivity.queries!=null && query!=null){
+            if(SearchActivity.queries!=null && query!=null && !SearchActivity.queries.contains(query)){
                 SearchActivity.queries.add(query);
                 SharedPreferences savedlocs=getSharedPreferences("results",Context.MODE_PRIVATE);
                 try{
@@ -144,6 +149,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        addMarker();
+        setUpMap();
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                Log.e("marker", "title is "+marker.getTitle());
+                return true;
+            }
+        });
+    }
+
 
 
     @Override
@@ -160,13 +180,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    /**
+     * 以下都是封装的方法
+     */
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        addMarker();
-        setUpMap();
-    }
+
+//    private String getUrl(){
+//        StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+//        googleDirectionsUrl.append("origin="+curmark.getPosition().latitude+","+curmark.getPosition().latitude);
+//        googleDirectionsUrl.append("&destination="+searchMark.getPosition().latitude+","+searchMark.getPosition().longitude);
+//        googleDirectionsUrl.append("&key="+"AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
+//        return googleDirectionsUrl.toString();
+//    }
 
 
     private void setUpMap(){
@@ -236,25 +261,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 curmark=mMap.addMarker(new MarkerOptions().position(userLocation).title(title));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14));
             }
-            Toast.makeText(getApplicationContext(),title, Toast.LENGTH_SHORT).show();
         }
     }
 
 
     private String getAddress(LatLng location){
 
-        String address="";
+        String add="";
 
         Geocoder geocoder=new Geocoder(MapsActivity.this, Locale.getDefault());
         try{
             List<Address> addresses=geocoder.getFromLocation(location.latitude, location.longitude, 1);
             if(addresses != null && addresses.size()>0) {
-                address = addresses.get(0).getThoroughfare();
+                add = addresses.get(0).getThoroughfare() + addresses.get(0).getSubThoroughfare();
+                Log.e("getAddress", String.valueOf(addresses.get(0).getAddressLine(0)));
             }
         }catch (IOException e){
             e.printStackTrace();
         }
-        return address;
+        return add;
     }
 
 
@@ -263,12 +288,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Geocoder geocoder=new Geocoder(MapsActivity.this,Locale.getDefault());
         try{
             List<Address> addresses=geocoder.getFromLocationName(query, 1);
-            Toast.makeText(getApplicationContext(), "NOT NULL", Toast.LENGTH_SHORT).show();
 
             if(addresses != null && addresses.size()>0) {
                 Address address=addresses.get(0);
                 LatLng newLoc=new LatLng(address.getLatitude(),address.getLongitude());
-
                 if(searchMark!=null) searchMark.remove();
                 if(mMap!=null){
                     searchMark=mMap.addMarker(new MarkerOptions().position(newLoc).title("new location"));

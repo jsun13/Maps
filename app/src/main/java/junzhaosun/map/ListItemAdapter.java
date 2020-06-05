@@ -18,10 +18,11 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListItemAdapter extends BaseAdapter {
-    private final List<String> list;
+    private List<String> list;
     private final Context context;
     private final LayoutInflater inflater;
     private ViewHolder holder;
@@ -31,6 +32,12 @@ public class ListItemAdapter extends BaseAdapter {
         this.context = context;
         this.list = list;
         this.inflater=LayoutInflater.from(context);
+    }
+
+    public void remove(int position){
+        if(position>=0 && position<list.size())
+            list.remove(position);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -47,6 +54,7 @@ public class ListItemAdapter extends BaseAdapter {
     public long getItemId(int position) {
         return position;
     }
+
 
     class ViewHolder{
         TextView text_item;
@@ -78,30 +86,22 @@ public class ListItemAdapter extends BaseAdapter {
 
     public  interface  mListener {
         public void  onShowLocation(BaseAdapter adapter, View view, int position);
-        public void  onDeleteLocation(BaseAdapter adapter, View view, int position);
+        public void  onDeleteLocation(ListItemAdapter adapter, View view, int position);
     }
-
-
-
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        if(convertView==null){
-            holder=new ViewHolder();
-            convertView=inflater.inflate(R.layout.list_item_adapter, null);
+        holder=new ViewHolder();
+        convertView=inflater.inflate(R.layout.list_item_adapter, null);
 
-            holder.text_item=(TextView) convertView.findViewById(R.id.item);
-            holder.text_item.setText(list.get(position));
-            holder.deleteButton=(ImageButton) convertView.findViewById(R.id.delete);
+        holder.text_item=(TextView) convertView.findViewById(R.id.item);
+        holder.text_item.setText(list.get(position));
+        holder.deleteButton=(ImageButton) convertView.findViewById(R.id.delete);
 
-            holder.text_item.setOnClickListener(mOnClickListener);
-            holder.deleteButton.setOnClickListener(mOnClickListener);
+        holder.text_item.setOnClickListener(mOnClickListener);
+        holder.deleteButton.setOnClickListener(mOnClickListener);
 
-            convertView.setTag(holder);
-        }else{
-            holder = (ViewHolder) convertView.getTag();
-        }
-
+        convertView.setTag(holder);
         holder.deleteButton.setTag(position);
         holder.text_item.setTag(position);
 
