@@ -128,6 +128,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        Button Bshow=(Button) findViewById(R.id.show);
+        Bshow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(curmark!=null){
+                    GetDirectionData getDirectionData=new GetDirectionData();
+                    String url=getUrl();
+                    Object[] obj=new Object[3];
+                    obj[0]=mMap;
+                    obj[1]=new LatLng(37.276488, -76.751203);
+                    obj[2]=url;
+//                    Log.e("execute", url);
+                    getDirectionData.execute(obj);
+                }else{
+                    Toast.makeText(getApplicationContext(),"invalid operation",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+
         /**
          * store unique action search result
          */
@@ -155,13 +175,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         addMarker();
         setUpMap();
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-                Log.e("marker", "title is "+marker.getTitle());
-                return true;
-            }
-        });
     }
 
 
@@ -172,6 +185,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (requestCode == 1) {
             if(resultCode == Activity.RESULT_OK){
                 if(data.hasExtra("query")){
+                    hasSearch=true;
                     String searchLoc=data.getStringExtra("query");
                     moveToQuery(searchLoc);
                 }
@@ -185,13 +199,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
 
 
-//    private String getUrl(){
-//        StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
-//        googleDirectionsUrl.append("origin="+curmark.getPosition().latitude+","+curmark.getPosition().latitude);
-//        googleDirectionsUrl.append("&destination="+searchMark.getPosition().latitude+","+searchMark.getPosition().longitude);
-//        googleDirectionsUrl.append("&key="+"AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
-//        return googleDirectionsUrl.toString();
-//    }
+    private String getUrl(){
+        StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/distancematrix/json?");
+        googleDirectionsUrl.append("origins="+curmark.getPosition().latitude+","+curmark.getPosition().longitude);
+        googleDirectionsUrl.append("&destinations=37.276488,-76.751203");
+        googleDirectionsUrl.append("&key=AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
+        return googleDirectionsUrl.toString();
+    }
 
 
     private void setUpMap(){
@@ -274,7 +288,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             List<Address> addresses=geocoder.getFromLocation(location.latitude, location.longitude, 1);
             if(addresses != null && addresses.size()>0) {
                 add = addresses.get(0).getThoroughfare() + addresses.get(0).getSubThoroughfare();
-                Log.e("getAddress", String.valueOf(addresses.get(0).getAddressLine(0)));
             }
         }catch (IOException e){
             e.printStackTrace();
