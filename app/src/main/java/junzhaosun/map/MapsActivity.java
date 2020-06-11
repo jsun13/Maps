@@ -34,6 +34,7 @@ import android.widget.Button;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -42,10 +43,16 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.PlacesClient;
+import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
+import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -87,6 +94,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private View.OnClickListener mButtonOnClickListener=new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.save:
+                    startActivityForResult(new Intent(getApplicationContext(), SearchActivity.class), 1);
+                    break;
+                case R.id.relocate:
+                    centerMapOnLocation(myLocation, "my Location");
+                    hasSearch=false;
+                    break;
+                case R.id.show:
+                    if(curmark!=null && searchMark!=null){
+                        GetDirectionData getDirectionData=new GetDirectionData();
+                        String url=getUrl();
+                        Object[] obj=new Object[3];
+                        obj[0]=mMap;
+                        obj[1]=searchMark.getPosition();
+                        obj[2]=url;
+                        getDirectionData.execute(obj);
+                    }else{
+                        Toast.makeText(getApplicationContext(),"invalid operation",Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,77 +132,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        final TextInputEditText inputEditText=(TextInputEditText) findViewById(R.id.inputLoc);
-
-        /**
-         * onclick methods for buttons
-         */
-        inputEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if(hasFocus){
-                    startActivityForResult(new Intent(getApplicationContext(), SearchActivity.class), 1);
-                    inputEditText.clearFocus();
-                }
-            }
-        });
-        inputEditText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(getApplicationContext(), SearchActivity.class), 1);
-            }
-        });
-
-
+        Button savedLocs=(Button) findViewById(R.id.save);
+        savedLocs.setOnClickListener(mButtonOnClickListener);
         Button Brelocate=(Button) findViewById(R.id.relocate);
-        Brelocate.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                centerMapOnLocation(myLocation, "my Location");
-                hasSearch=false;
-            }
-        });
-
+        Brelocate.setOnClickListener(mButtonOnClickListener);
         Button Bshow=(Button) findViewById(R.id.show);
-        Bshow.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(curmark!=null){
-                    GetDirectionData getDirectionData=new GetDirectionData();
-                    String url=getUrl();
-                    Object[] obj=new Object[3];
-                    obj[0]=mMap;
-                    obj[1]=new LatLng(37.276488, -76.751203);
-                    obj[2]=url;
-//                    Log.e("execute", url);
-                    getDirectionData.execute(obj);
-                }else{
-                    Toast.makeText(getApplicationContext(),"invalid operation",Toast.LENGTH_SHORT).show();
+        Bshow.setOnClickListener(mButtonOnClickListener);
+
+        Places.initialize(getApplicationContext(),"AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
+
+        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
+                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
+
+        if(autocompleteFragment!=null){
+            autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.ID, Place.Field.NAME));
+
+            autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+                @Override
+                public void onPlaceSelected(Place place) {
+                    moveToQuery(place.getName());
                 }
-            }
-        });
+
+                @Override
+                public void onError(Status status) {
+                    Log.i("onerror", "An error occurred: " + status);
+                }
+            });
+        }
 
 
         /**
          * store unique action search result
          */
-        Intent intent=getIntent();
-
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            hasSearch=true;
-            query=intent.getStringExtra(SearchManager.QUERY);
-            moveToQuery(query);
-            if(SearchActivity.queries!=null && query!=null && !SearchActivity.queries.contains(query)){
-                SearchActivity.queries.add(query);
-                SharedPreferences savedlocs=getSharedPreferences("results",Context.MODE_PRIVATE);
-                try{
-                    savedlocs.edit().putString("queries",ObjectSerializer.serialize(SearchActivity.queries)).apply();
-                }catch (IOException e){
-                    e.printStackTrace();
-                }
-                moveToQuery(query);
-            }
-        }
+//        Intent intent=getIntent();
+//
+//        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+//            hasSearch=true;
+//            query=intent.getStringExtra(SearchManager.QUERY);
+//            moveToQuery(query);
+//            if(SearchActivity.queries!=null && query!=null && !SearchActivity.queries.contains(query)){
+//                SearchActivity.queries.add(query);
+//                SharedPreferences savedlocs=getSharedPreferences("results",Context.MODE_PRIVATE);
+//                try{
+//                    savedlocs.edit().putString("queries",ObjectSerializer.serialize(SearchActivity.queries)).apply();
+//                }catch (IOException e){
+//                    e.printStackTrace();
+//                }
+//                moveToQuery(query);
+//            }
+//        }
     }
 
     @Override
@@ -202,7 +215,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String getUrl(){
         StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/distancematrix/json?");
         googleDirectionsUrl.append("origins="+curmark.getPosition().latitude+","+curmark.getPosition().longitude);
-        googleDirectionsUrl.append("&destinations=37.276488,-76.751203");
+        googleDirectionsUrl.append("&destinations="+searchMark.getPosition().latitude+","+searchMark.getPosition().longitude);
         googleDirectionsUrl.append("&key=AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
         return googleDirectionsUrl.toString();
     }

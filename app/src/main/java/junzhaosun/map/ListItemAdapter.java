@@ -58,7 +58,7 @@ public class ListItemAdapter extends BaseAdapter {
 
     class ViewHolder{
         TextView text_item;
-        ImageButton deleteButton;
+        ImageView deleteButton;
     }
 
     public void setOnClickListener(mListener listener) {
@@ -96,7 +96,7 @@ public class ListItemAdapter extends BaseAdapter {
 
         holder.text_item=(TextView) convertView.findViewById(R.id.item);
         holder.text_item.setText(list.get(position));
-        holder.deleteButton=(ImageButton) convertView.findViewById(R.id.delete);
+        holder.deleteButton=(ImageView) convertView.findViewById(R.id.delete);
 
         holder.text_item.setOnClickListener(mOnClickListener);
         holder.deleteButton.setOnClickListener(mOnClickListener);
