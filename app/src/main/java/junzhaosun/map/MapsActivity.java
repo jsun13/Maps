@@ -70,7 +70,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Location myLocation;
     private Marker searchMark;
     private boolean hasSearch=false;
-    private String query;
+
+    //buttons
+    SwitchIconView Brelocate;
+    SwitchIconView Bshow;
+    SwitchIconView savedLocs;
+//    private String query;
     /***
      * Whether a user responses yes or no to location request
      * @param requestCode
@@ -99,14 +104,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.save:
+                    v.setEnabled(true);
+                    Brelocate.setEnabled(false);
+                    Bshow.setEnabled(false);
                     startActivityForResult(new Intent(getApplicationContext(), SearchActivity.class), 1);
                     break;
                 case R.id.relocate:
+                    v.setEnabled(true);
+                    Bshow.setEnabled(false);
                     centerMapOnLocation(myLocation, "my Location");
                     hasSearch=false;
                     break;
                 case R.id.show:
                     if(curmark!=null && searchMark!=null){
+                        v.setEnabled(true);
                         GetDirectionData getDirectionData=new GetDirectionData();
                         String url=getUrl();
                         Object[] obj=new Object[3];
@@ -114,6 +125,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         obj[1]=searchMark.getPosition();
                         obj[2]=url;
                         getDirectionData.execute(obj);
+                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(searchMark.getPosition(), 14));
+                        Brelocate.setEnabled(false);
+                        savedLocs.setEnabled(false);
                     }else{
                         Toast.makeText(getApplicationContext(),"invalid operation",Toast.LENGTH_SHORT).show();
                     }
@@ -132,11 +146,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Button savedLocs=(Button) findViewById(R.id.save);
+        savedLocs= findViewById(R.id.save);
         savedLocs.setOnClickListener(mButtonOnClickListener);
-        Button Brelocate=(Button) findViewById(R.id.relocate);
+        Brelocate=(SwitchIconView) findViewById(R.id.relocate);
         Brelocate.setOnClickListener(mButtonOnClickListener);
-        Button Bshow=(Button) findViewById(R.id.show);
+        Bshow=(SwitchIconView) findViewById(R.id.show);
         Bshow.setOnClickListener(mButtonOnClickListener);
 
         Places.initialize(getApplicationContext(),"AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
@@ -150,6 +164,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
                 @Override
                 public void onPlaceSelected(Place place) {
+                    if(Brelocate.isEnabled()) Brelocate.setEnabled(false);
                     moveToQuery(place.getName());
                 }
 
@@ -188,10 +203,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         addMarker();
         setUpMap();
+        mMap.setOnCameraMoveListener(new GoogleMap.OnCameraMoveListener() {
+            @Override
+            public void onCameraMove() {
+                if(Brelocate.isEnabled())Brelocate.setEnabled(false);
+                if(Bshow.isEnabled()) Bshow.setEnabled(false);
+            }
+        });
     }
 
 
-
+    /**
+     * deal with data sent from searchActivity
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -201,6 +228,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     hasSearch=true;
                     String searchLoc=data.getStringExtra("query");
                     moveToQuery(searchLoc);
+                    savedLocs.setEnabled(false);
                 }
             }
         }
@@ -229,8 +257,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationChanged(Location location) {
                 if(!hasSearch){
                     centerMapOnLocation(location, "Your location");
-                }else if(hasSearch){
-                    moveToQuery(query);
                 }
                 myLocation=location;
             }
