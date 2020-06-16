@@ -1,4 +1,4 @@
-package junzhaosun.map;
+package junzhaosun.map.classes;
 
 import com.google.android.gms.maps.model.LatLng;
 

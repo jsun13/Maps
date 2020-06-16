@@ -1,4 +1,4 @@
-package junzhaosun.map;
+package junzhaosun.map.classes;
 
 import android.animation.ArgbEvaluator;
 import android.animation.ValueAnimator;
@@ -27,6 +27,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import junzhaosun.map.R;
 
 
 public class SwitchIconView extends LinearLayout {
@@ -83,24 +85,51 @@ public class SwitchIconView extends LinearLayout {
             mImage.setImageResource(src);
         }
 
-        setLook(disabledStateColor,disabledStateAlpha);
-
+        setColor(disabledStateColor);
+        set_Alpha(disabledStateAlpha);
     }
     public void setEnabled(boolean enable){
         if(this.enable == enable) return;
-        Log.e("enable", "my enable = "+this.enable+", passing enable = "+enable);
         this.enable=enable;
-        setLook(enable? iconTintColor: disabledStateColor,enable? 1f:disabledStateAlpha);//initial look, not activated
+        this.fraction=enable? 0f: 1f;
+        setColor(enable? iconTintColor: disabledStateColor);
+        animateToFraction(enable? 1f: disabledStateAlpha);
     }
 
     public boolean isEnabled(){
         return enable;
     }
 
-    private void setLook(int color, float alpha){
-        mtext.setAlpha(alpha);
-        mImage.setAlpha(alpha);
+    private void setColor(int color){
         mtext.setTextColor(color);
         mImage.setColorFilter(color);
+    }
+
+    private void set_Alpha(float alpha){
+        mtext.setAlpha(alpha);
+        mImage.setAlpha(alpha);
+    }
+
+    private void animateToFraction(float toFraction) {
+        ValueAnimator animator = ValueAnimator.ofFloat(fraction, toFraction);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                set_Alpha((float) animation.getAnimatedValue());
+                postInvalidateOnAnimationCompat();
+            }
+        });
+        animator.setInterpolator(new DecelerateInterpolator());
+        animator.setDuration(animationDuration);
+        animator.start();
+    }
+
+    private void postInvalidateOnAnimationCompat() {
+        final long fakeFrameTime = 10;
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            postInvalidateOnAnimation();
+        } else {
+            postInvalidateDelayed(fakeFrameTime);
+        }
     }
 }

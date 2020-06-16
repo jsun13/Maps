@@ -1,4 +1,4 @@
-package junzhaosun.map;
+package junzhaosun.map.classes;
 
 
 import java.io.ByteArrayInputStream;

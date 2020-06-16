@@ -1,4 +1,4 @@
-package junzhaosun.map;
+package junzhaosun.map.classes;
 
 import android.os.AsyncTask;
 import android.util.Log;
@@ -33,7 +33,6 @@ public class GetDirectionData extends AsyncTask<Object, String, String> {
         mMap = (GoogleMap)objects[0];
         destination=(LatLng)objects[1];
         url = (String)objects[2];
-        Log.e("passed url", url);
         googleDirectionsData="";
         try {
             googleDirectionsData = readUrl(url);
@@ -77,6 +76,8 @@ public class GetDirectionData extends AsyncTask<Object, String, String> {
         }
         map.put("distance", distance);
         map.put("duration", duration);
+        Log.i("download distance", distance);
+        Log.i("download duration", duration);
         return map;
     }
 
@@ -115,7 +116,6 @@ public class GetDirectionData extends AsyncTask<Object, String, String> {
             urlConnection.disconnect();
         }
 
-        Log.e("data downlaod",data);
         return data;
     }
 }
