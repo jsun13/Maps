@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import junzhaosun.map.LoginActivity;
 import junzhaosun.map.R;
 
 public class SignUpFragment extends Fragment {
@@ -74,8 +75,12 @@ public class SignUpFragment extends Fragment {
             }
             @Override
             public void afterTextChanged(Editable s) {
-                namevalid=true;
-                checkUser(s);
+                if(checkLen(s, usernameLayout, 3) && checkLetterOrDigit(s, usernameLayout)){
+                    namevalid=true;
+                    usernameLayout.setError(null);
+                }else{
+                    namevalid=false;
+                }
             }
         });
         password.addTextChangedListener(new TextWatcher() {
@@ -88,8 +93,12 @@ public class SignUpFragment extends Fragment {
 
             @Override
             public void afterTextChanged(Editable s) {
-                passwordvalid=true;
-                checkPassword();
+                if(checkLen(s, passwordLayout, 6) && checkLetterOrDigit(s, passwordLayout)){
+                    passwordvalid=true;
+                    passwordLayout.setError(null);
+                }else{
+                    passwordvalid=false;
+                }
             }
         });
 
@@ -103,48 +112,40 @@ public class SignUpFragment extends Fragment {
     }
 
     /**
-     * check whether username is at least 3 chars long
-     * and letterOrDigit only
+     * shared method for both login and sign up fragments
+     * check if the given string has met the required length
      * @param s
+     * @param layout
+     * @param l
+     * @return
      */
-    private void checkUser(CharSequence s){
-        if(s.length()<3){
-            usernameLayout.setError("!username.length >=3 ");
-            namevalid=false;
+    public static boolean checkLen(CharSequence s, TextInputLayout layout, int l){
+        if(s.length()<l){
+            layout.setError("!length >="+l+" ");
+            return false;
         }
-        for(int i=0; i<s.length(); ++i){
-            if(!Character.isLetterOrDigit(s.charAt(i))){
-                String error=usernameLayout.getError().toString();
-                usernameLayout.setError(error+" must be digit or char");
-                namevalid=false;
-            }
-        }
-        if(namevalid==true){
-            usernameLayout.setError(null);
-        }
+        return true;
     }
 
     /**
-     * check whether password is at least 6 chars long
-     * contains letterOrDigit and at least one special
-     *
-     * passwords need to be matched
+     * check if the given string consists only of letters or digits
+     * @param s
+     * @param layout
+     * @return
      */
-    private void checkPassword(){
-        if(password.getText().length()<6) {
-            passwordLayout.setError("!password>=6");
-            passwordvalid = false;
-        }
-        String s=password.getText().toString();
-        boolean hasSpecial=false;
+    public static boolean checkLetterOrDigit(CharSequence s, TextInputLayout layout){
         for(int i=0; i<s.length(); ++i){
-            if(!Character.isLetterOrDigit(s.charAt(i)) ) {
-                Toast.makeText(getContext(), "must be digit/char", Toast.LENGTH_SHORT).show();
-                passwordvalid = false;
+            if(!Character.isLetterOrDigit(s.charAt(i))){
+                if(layout.getError()!=null){
+                    String error=layout.getError().toString();
+                    layout.setError(error+" must be digit or char");
+                }else{
+                    layout.setError(" must be digit or char");
+                }
+                return false;
             }
         }
-        if(passwordvalid==true)
-            passwordLayout.setError(null);
+        return true;
     }
 
     private void SignUp(){
@@ -160,7 +161,8 @@ public class SignUpFragment extends Fragment {
                 @Override
                 public void done(ParseException e) {
                     if (e == null) {
-                        Log.i("Info", "user signed up");
+                        NavHostFragment.findNavController(SignUpFragment.this)
+                                .popBackStack();
                     } else {
                         String message = e.getMessage();
                         if (message.toLowerCase().contains("java")) {
@@ -170,8 +172,7 @@ public class SignUpFragment extends Fragment {
                     }
                 }
             });
-            NavHostFragment.findNavController(SignUpFragment.this)
-                    .popBackStack();
+
         }else{
             Log.e("sign up", "invalid sign up info");
         }
