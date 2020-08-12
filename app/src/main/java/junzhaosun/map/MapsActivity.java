@@ -9,6 +9,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import junzhaosun.map.classes.Constants;
 import junzhaosun.map.classes.GetDirectionData;
+import junzhaosun.map.classes.GetPath;
+import junzhaosun.map.classes.ObjectSerializer;
 import junzhaosun.map.classes.SwitchIconView;
 
 import android.Manifest;
@@ -17,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -38,12 +41,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -97,27 +102,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     v.setEnabled(true);
                     Brelocate.setEnabled(false);
                     Bshow.setEnabled(false);
+                    if(searchMark!=null && SearchActivity.queries!=null){
+                        String address=getAddress(searchMark.getPosition());
+                        SearchActivity.queries.add(address);
+                        SharedPreferences savedlocs=getSharedPreferences("results",Context.MODE_PRIVATE);
+                        try{
+                            savedlocs.edit().putString("queries", ObjectSerializer.serialize(SearchActivity.queries)).apply();
+                        }catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     startActivityForResult(new Intent(getApplicationContext(), SearchActivity.class), 1);
                     break;
                 case R.id.relocate:
                     v.setEnabled(true);
                     Bshow.setEnabled(false);
-                    centerMapOnLocation(myLocation, "my Location");
+                    if(searchMark!=null) searchMark=null;
+                    centerMapOnLocation(myLocation, "Your location");
                     hasSearch=false;
                     break;
                 case R.id.show:
                     if(curmark!=null && searchMark!=null){
-                        v.setEnabled(true);
-                        GetDirectionData getDirectionData=new GetDirectionData();
-                        String url=getUrl();
-                        Object[] obj=new Object[3];
-                        obj[0]=mMap;
-                        obj[1]=searchMark.getPosition();
-                        obj[2]=url;
-                        getDirectionData.execute(obj);
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(searchMark.getPosition(), 14));
-                        Brelocate.setEnabled(false);
-                        savedLocs.setEnabled(false);
+                        if(!v.isEnabled()){
+                            v.setEnabled(true);
+                            GetDirectionData getDirectionData=new GetDirectionData();
+
+                            String url=getDistanceUrl();
+                            Object[] obj=new Object[3];
+                            obj[0]=mMap;
+                            obj[1]=searchMark;
+                            obj[2]=url;
+                            getDirectionData.execute(obj);
+
+                            GetPath getPath=new GetPath();
+                            Object[] obj2=new Object[3];
+                            obj2[0]=mMap;
+                            obj2[1]=searchMark.getPosition();
+                            obj2[2]=getPathUrl();
+                            getPath.execute(obj2);
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(searchMark.getPosition(), 14));
+                            Brelocate.setEnabled(false);
+                            savedLocs.setEnabled(false);
+                        }else{
+                            v.setEnabled(false);
+                            Object[] obj=new Object[2];
+                            obj[0]=searchMark.getPosition();
+                            obj[1]=curmark.getPosition();
+                            mMap.clear();
+                            LatLng search=(LatLng) obj[0];
+                            LatLng cur=(LatLng) obj[1];
+                            searchMark=mMap.addMarker(new MarkerOptions().position(search).title(getAddress(search)));
+                            curmark=mMap.addMarker(new MarkerOptions().position(cur).title("Your location"));
+                            searchMark.showInfoWindow();
+                            curmark.showInfoWindow();
+                        }
                     }else{
                         Toast.makeText(getApplicationContext(),"invalid operation",Toast.LENGTH_SHORT).show();
                     }
@@ -187,6 +225,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        }
     }
 
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -229,12 +268,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
 
 
-    private String getUrl(){
+    private String getDistanceUrl(){
         StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/distancematrix/json?");
         googleDirectionsUrl.append("origins="+curmark.getPosition().latitude+","+curmark.getPosition().longitude);
         googleDirectionsUrl.append("&destinations="+searchMark.getPosition().latitude+","+searchMark.getPosition().longitude);
         googleDirectionsUrl.append("&key=AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
         return googleDirectionsUrl.toString();
+    }
+
+    private String getPathUrl(){
+        StringBuilder url = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        url.append("origin="+curmark.getPosition().latitude+","+curmark.getPosition().longitude);
+        url.append("&destination="+searchMark.getPosition().latitude+","+searchMark.getPosition().longitude);
+        url.append("&key=AIzaSyAVust1m2U_6bQ5vGSj4kE3yR8aW5KH8eo");
+        return url.toString();
     }
 
 
@@ -301,13 +348,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if(curmark!=null) curmark.remove();
             if(mMap!=null){
                 curmark=mMap.addMarker(new MarkerOptions().position(userLocation).title(title));
+                curmark.showInfoWindow();
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14));
             }
         }
     }
 
 
-    private String getAddress(LatLng location){
+    public String getAddress(LatLng location){
 
         String add="";
 
@@ -335,7 +383,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 LatLng newLoc=new LatLng(address.getLatitude(),address.getLongitude());
                 if(searchMark!=null) searchMark.remove();
                 if(mMap!=null){
-                    searchMark=mMap.addMarker(new MarkerOptions().position(newLoc).title("new location"));
+                    searchMark=mMap.addMarker(new MarkerOptions().position(newLoc).title(address.getAddressLine(0)));
+                    searchMark.showInfoWindow();
                     mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newLoc, 14));
                 }
             }else{

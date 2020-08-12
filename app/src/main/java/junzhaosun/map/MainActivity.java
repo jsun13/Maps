@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 editor.putBoolean("resident", true);
-                editor.commit();
+                editor.apply();
                 startActivity(new Intent(getApplicationContext(), MapsActivity.class));
 
             }
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 editor.putBoolean("commuter", true);
-                editor.commit();
+                editor.apply();
                 startActivity(new Intent(getApplicationContext(), MapsActivity.class));
 
             }
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 editor.putBoolean("faculty", true);
-                editor.commit();
+                editor.apply();
                 startActivity(new Intent(getApplicationContext(), MapsActivity.class));
             }
         });

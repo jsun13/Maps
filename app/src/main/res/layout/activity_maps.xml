@@ -45,7 +45,7 @@
             map:layout_constraintStart_toEndOf="@+id/relocate"
             map:layout_constraintTop_toTopOf="parent"
             map:si_src="@drawable/ic_show_direction"
-            map:si_text="direction"
+            map:si_text="navigate"
             map:si_tint_color="@color/quantum_orange" />
 
         <junzhaosun.map.classes.SwitchIconView

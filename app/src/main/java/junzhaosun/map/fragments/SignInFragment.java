@@ -63,7 +63,6 @@ public class SignInFragment extends Fragment {
                                     String message = e.getMessage();
                                     if (message.toLowerCase().contains("java")) {
                                         message = e.getMessage().substring(e.getMessage().indexOf(" "));
-
                                     }
                                     Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                                 }

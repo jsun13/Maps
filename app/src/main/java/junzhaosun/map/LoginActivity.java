@@ -22,9 +22,6 @@ public class LoginActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
         fragmentManager=getSupportFragmentManager();
-
-
     }
 }
